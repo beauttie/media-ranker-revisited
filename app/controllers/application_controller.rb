@@ -7,6 +7,15 @@ class ApplicationController < ActionController::Base
     return render :file => "#{Rails.root}/public/404.html", :status => 404, :layout => false
   end
 
+  def require_login
+    if @login_user.nil?
+      flash[:status] = :danger
+      flash[:result_text] = "You must log in to do that"
+      redirect_to root_path
+      return
+    end
+  end
+
   private
 
   def find_user

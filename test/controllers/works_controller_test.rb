@@ -33,21 +33,64 @@ describe WorksController do
   CATEGORIES = %w(albums books movies)
   INVALID_CATEGORIES = ["nope", "42", "", "  ", "albumstrailingtext"]
 
-  describe "index" do
-    it "succeeds when there are works" do
-      get works_path
-
-      must_respond_with :success
+  describe "Logged in users" do
+    before do
+      perform_login(users(:kari))
     end
 
-    it "succeeds when there are no works" do
-      Work.all do |work|
-        work.destroy
+    describe "index" do
+      it "succeeds when there are works" do
+        get works_path
+
+        must_respond_with :success
       end
 
-      get works_path
+      it "succeeds when there are no works" do
+        Work.all do |work|
+          work.destroy
+        end
 
-      must_respond_with :success
+        get works_path
+
+        must_respond_with :success
+      end
+    end
+
+    describe "show" do
+      it "succeeds for an extant work ID" do
+        get work_path(existing_work.id)
+
+        must_respond_with :success
+      end
+
+      it "renders 404 not_found for a bogus work ID" do
+        destroyed_id = existing_work.id
+        existing_work.destroy
+
+        get work_path(destroyed_id)
+
+        must_respond_with :not_found
+      end
+    end
+  end
+
+  describe "Guest users" do
+    describe "index" do
+      it "cannot access index and redirects to the root path" do
+        get works_path
+
+        must_redirect_to root_path
+        expect(flash[:result_text]).must_equal "You must log in to do that"
+      end
+    end
+
+    describe "show" do
+      it "cannot access show and redirects to the root path" do
+        get work_path(existing_work.id)
+
+        must_redirect_to root_path
+        expect(flash[:result_text]).must_equal "You must log in to do that"
+      end
     end
   end
 
@@ -92,23 +135,6 @@ describe WorksController do
         expect(Work.find_by(title: "Invalid Work", category: category)).must_be_nil
         must_respond_with :bad_request
       end
-    end
-  end
-
-  describe "show" do
-    it "succeeds for an extant work ID" do
-      get work_path(existing_work.id)
-
-      must_respond_with :success
-    end
-
-    it "renders 404 not_found for a bogus work ID" do
-      destroyed_id = existing_work.id
-      existing_work.destroy
-
-      get work_path(destroyed_id)
-
-      must_respond_with :not_found
     end
   end
 
@@ -192,16 +218,16 @@ describe WorksController do
       @work = works(:poodr)
     end
 
-    it "redirects to the work page if no user is logged in" do
+    it "redirects to the root path if no user is logged in" do
       expect {
         post upvote_path(@work)
       }.wont_change "Vote.count"
 
-      must_redirect_to work_path(@work)
+      must_redirect_to root_path
       expect(flash[:result_text]).must_equal "You must log in to do that"
     end
 
-    it "redirects to the work page after the user has logged out" do
+    it "redirects to the root path after the user has logged out" do
       perform_login
       post logout_path
 
@@ -209,7 +235,7 @@ describe WorksController do
         post upvote_path(@work)
       }.wont_change "Vote.count"
 
-      must_redirect_to work_path(@work)
+      must_redirect_to root_path
       expect(flash[:result_text]).must_equal "You must log in to do that"
     end
 
