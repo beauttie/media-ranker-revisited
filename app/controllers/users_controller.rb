@@ -13,16 +13,16 @@ class UsersController < ApplicationController
     user = User.find_by(uid: auth_hash[:uid], provider: params[:provider])
 
     if user
-      flash[:status] = "success"
+      flash[:status] = :success
       flash[:result_text] = "Logged in as returning user #{user.username}"
     else
       user = User.build_from_github(auth_hash)
 
       if user.save
-        flash[:status] = "success"
+        flash[:status] = :success
         flash[:result_text] = "Logged in as new user #{user.username}"
       else
-        flash[:status] = "failure"
+        flash[:status] = :failure
         flash[:messages] = "Could not create new user account: #{user.errors.messages}"
         return redirect_to root_path
       end
@@ -30,14 +30,6 @@ class UsersController < ApplicationController
 
     session[:user_id] = user.id
     return redirect_to root_path
-  end
-
-  def destroy
-    session[:user_id] = nil
-    flash[:status] = "success"
-    flash[:result_text] = "Successfully logged out!"
-
-    redirect_to root_path
   end
 
   # def login_form
@@ -65,11 +57,15 @@ class UsersController < ApplicationController
   #   end
   #   redirect_to root_path
   # end
-  #
-  # def logout
-  #   session[:user_id] = nil
-  #   flash[:status] = :success
-  #   flash[:result_text] = "Successfully logged out"
-  #   redirect_to root_path
-  # end
+
+  def logout
+    if @login_user
+      session[:user_id] = nil
+      flash[:status] = :success
+      flash[:result_text] = "Successfully logged out"
+    else
+      flash[:warning] = "You were not logged in!"
+    end
+    redirect_to root_path
+  end
 end

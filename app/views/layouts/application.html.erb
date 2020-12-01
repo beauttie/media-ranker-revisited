@@ -40,7 +40,7 @@
           <%= link_to "Logged in as #{@login_user.username}", user_path(@login_user), class: "btn btn-primary" %>
         </li>
         <li class="nav-item app-header__nav_item">
-          <%= link_to "Log out", logout_path, method: "delete", class: "btn btn-primary" %>
+          <%= link_to "Log out", logout_path, method: :post, class: "btn btn-primary" %>
         </li>
 
         <% else %>
@@ -56,7 +56,7 @@
 
   <% if flash[:result_text] or flash[:messages] %>
     <section class="alert__container">
-      <div class="alert alert-<%= flash[:status].to_s == 'failure' ? 'warning' : flash[:status] %>">
+      <div class="alert alert-<%= flash[:status].to_s == 'failure' ? 'warning' : flash[:status].to_s %>">
         <span><%= flash[:status].to_s == "failure" ? "A problem occurred: " : "" %><%= flash[:result_text] %></span>
         <% if flash[:messages] %>
           <ul>
